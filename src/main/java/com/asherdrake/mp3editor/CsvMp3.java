@@ -31,20 +31,13 @@ public class CsvMp3 {
 			
 			for (int i = 0; i < tags.size(); i++) {
 				ID3v1 tag = tags.get(i);
-
-				fileWriter.append(tag.getTrack());
-				fileWriter.append(",");
 				
-				fileWriter.append(tag.getAlbum());
-				fileWriter.append(",");
-				
-				fileWriter.append(tag.getArtist());
-				fileWriter.append(",");
-				
-				fileWriter.append(tag.getTitle());
-				fileWriter.append(",");
-
-				fileWriter.append(mp3Paths.get(i) + "\n");
+				fileWriter.append(tag.getTrack() + "," + 
+								  tag.getAlbum() + "," + 
+								  tag.getArtist() + "," + 
+								  tag.getTitle() + "," + 
+								  tag.getTitle() + "," + 
+								  mp3Paths.get(i) + "\n");
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
