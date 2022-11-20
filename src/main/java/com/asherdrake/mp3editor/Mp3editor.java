@@ -34,12 +34,11 @@ public class Mp3editor {
 					+ "   mp3editor editmp3 -m /Users/user/editedmp3s -c /Users/user/mp3metadata.csv\n";
 		
 		try {
-			String command = args[0].toLowerCase();
-			if (args.length != 0 && (command.equals("makecsv") || command.equals("editmp3s"))) {
-				if (command.equals("makecsv")) { //parses arguments then calls the makeCsv method
+			if (args.length != 0 && (args[0].toLowerCase().equals("makecsv") || args[0].toLowerCase().equals("editmp3s"))) {
+				if (args[0].toLowerCase().equals("makecsv")) { //parses arguments then calls the makeCsv method
 					String[] paths = parseArgs(args);
 					makeCsv(paths[0], paths[1]);
-				} else if (command.equals("editmp3s")) { //parses arguments then calls the editMp3s method
+				} else if (args[0].toLowerCase().equals("editmp3s")) { //parses arguments then calls the editMp3s method
 					String[] paths = parseArgs(args);
 					editMp3s(paths[0], paths[1]);
 				}
@@ -56,36 +55,40 @@ public class Mp3editor {
 	}
 	
 	public static String[] parseArgs(String[] args) {
-		//default paths
-		String mp3Path = System.getProperty("user.dir");
-		String csvPath = System.getProperty("user.dir") + "/mp3tags.csv";
+		String mp3Path = null;
+		String csvPath = null;
 		String[] paths = new String[2];
 		
 		//throws an IllegalArgumentException if the incorrect arguments or # of arguments were passed
-		List <String> argsList = Arrays.asList(args);
-		boolean containsM = argsList.contains("-m");
-		boolean containsC = argsList.contains("-c");
-		if (containsM && containsC) {
+		if (Arrays.asList(args).contains("-m") && Arrays.asList(args).contains("-c")) {
 			if (args.length != 5) {
 				throw new IllegalArgumentException("Please specify the correct arguments or # of arguments.");
 			}
-		} else if (containsM || containsC) {
+		} else if (Arrays.asList(args).contains("-m") || Arrays.asList(args).contains("-c")) {
 			if (args.length != 3) {
 				throw new IllegalArgumentException("Please specify the correct arguments or # of arguments.");
 			}
-		} else if (!(containsM || containsC)) {
+		} else if (!(Arrays.asList(args).contains("-m") || Arrays.asList(args).contains("-c"))) {
 			if (args.length != 1) {
 				throw new IllegalArgumentException("Please specify the correct arguments or # of arguments.");
 			}
 		}
 		
 		for (int i = 1; i < args.length; i++) {
-			String arg = args[i].toLowerCase();
-			if (arg.equals("-m")) {
+			if (args[i].toLowerCase().equals("-m")) {
 				mp3Path = args[i + 1];
-			} else if (arg.equals("-c")) {
+			} else if (args[i].toLowerCase().equals("-c")) {
 				csvPath = args[i + 1];
 			}
+		}
+		
+		//sets default paths if no path was passed
+		if (mp3Path == null) {
+			mp3Path = System.getProperty("user.dir");
+		}
+		
+		if (csvPath == null) {
+			csvPath = System.getProperty("user.dir") + "/mp3tags.csv";
 		}
 		
 		paths[0] = mp3Path;
