@@ -34,28 +34,27 @@ public class Mp3editor {
 					+ "   mp3editor editmp3 -m /Users/user/editedmp3s -c /Users/user/mp3metadata.csv\n";
 		
 		try {
+			Mp3editor editor = new Mp3editor();
 			String command = args[0].toLowerCase();
 			if (args.length != 0 && (command.equals("makecsv") || command.equals("editmp3s"))) {
 				if (command.equals("makecsv")) { //parses arguments then calls the makeCsv method
-					String[] paths = parseArgs(args);
-					makeCsv(paths[0], paths[1]);
+					String[] paths = editor.parseArgs(args);
+					Writer fileWriter = editor.getWriter(paths[1]);
+					editor.makeCsv(paths[0], paths[1], fileWriter);
 				} else if (command.equals("editmp3s")) { //parses arguments then calls the editMp3s method
-					String[] paths = parseArgs(args);
-					editMp3s(paths[0], paths[1]);
+					String[] paths = editor.parseArgs(args);
+					editor.editMp3s(paths[0], paths[1]);
 				}
 			} else { //throws an IllegalArgumentException if no command or the incorrect command was passed
 				throw new IllegalArgumentException("Please specify a command.");
 			}
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			System.out.println(help);
-		} catch (IndexOutOfBoundsException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(help);
 		}
 	}
 	
-	public static String[] parseArgs(String[] args) {
+	public String[] parseArgs(String[] args) throws IllegalArgumentException{
 		//default paths
 		String mp3Path = System.getProperty("user.dir");
 		String csvPath = System.getProperty("user.dir") + "/mp3tags.csv";
@@ -67,15 +66,15 @@ public class Mp3editor {
 		boolean containsC = argsList.contains("-c");
 		if (containsM && containsC) {
 			if (args.length != 5) {
-				throw new IllegalArgumentException("Please specify the correct arguments or # of arguments.");
+				throw new IllegalArgumentException("Two flags were entered, but the # of arguments is invalid.");
 			}
 		} else if (containsM || containsC) {
 			if (args.length != 3) {
-				throw new IllegalArgumentException("Please specify the correct arguments or # of arguments.");
+				throw new IllegalArgumentException("One flag was entered, but the # of arguments is invalid.");
 			}
-		} else if (!(containsM || containsC)) {
+		} else {
 			if (args.length != 1) {
-				throw new IllegalArgumentException("Please specify the correct arguments or # of arguments.");
+				throw new IllegalArgumentException("No flags were specified, but the # of arguments is invalid.");
 			}
 		}
 		
@@ -93,7 +92,7 @@ public class Mp3editor {
 		return paths;
 	}
 	
-	public static void makeCsv(String mp3FolderPath, String csvOutputPath) throws IllegalArgumentException, InvalidDataException, UnsupportedTagException, IOException { 
+	public void makeCsv(String mp3FolderPath, String csvOutputPath, Writer writer) throws IllegalArgumentException, InvalidDataException, UnsupportedTagException, IOException { 
 		//validates paths
 		File mp3Folder = new File(mp3FolderPath);
 		File csvOutput = new File(csvOutputPath);
@@ -110,28 +109,40 @@ public class Mp3editor {
 			throw new IllegalArgumentException("Csv file path leads to a directory, not a file.");
 		}
 		
-		//if the specified csv file already exists, the path is updated to include the number of copies at the end. Ex: mp3data (1).csv
+		//gets Id3 tags and file paths from the mp3 files
+		ArrayList<Mp3Info> mp3Info = getMp3Info(mp3Folder);
+		
+		//calls the writeCsv method
+		CsvMp3 csv = new CsvMp3(mp3Info, csvOutputPath, writer);
+		csv.writeCsv();
+		System.out.println("Csv file complete.");
+	}
+	
+	public Writer getWriter(String csvOut) throws IllegalArgumentException, IOException {
+		File csvOutput = new File(csvOut);
+		
 		if (csvOutput.exists()) {
-			int copies = 1;
-			String suffix = csvOutputPath.substring(csvOutputPath.indexOf(".csv"));
-			int suffixIndex = csvOutputPath.indexOf(".csv");
-			String csvOutputCopy = null;
-			while (csvOutput.exists()) {
-				csvOutputCopy = csvOutputPath.substring(0, suffixIndex) + " (" + copies + ")" + suffix;
-				csvOutput = new File(csvOutputCopy);
-				copies++;
-			}
-			csvOutputPath = csvOutputCopy;
+			throw new IllegalArgumentException("Csv File already exists.");
 		}
 		
-		//gets Id3 tags and file paths from the mp3 files
-		ArrayList<ID3v1> tags = new ArrayList<ID3v1>();
-		ArrayList<String> mp3Paths = new ArrayList<String>();
-		File[] mp3FolderFiles = mp3Folder.listFiles();
+		FileWriter fileWriter = new FileWriter(csvOut);
 		
-		for (int i  = 0; i < mp3FolderFiles.length; i++) {
-			if (mp3FolderFiles[i].getAbsolutePath().contains(".mp3")) {
-				String filePath = mp3FolderFiles[i].getAbsolutePath();
+		return fileWriter;
+	}
+	
+	public ArrayList<Mp3Info> getMp3Info(File mp3Folder) throws InvalidDataException, UnsupportedTagException, IOException {
+		File[] mp3Files = mp3Folder.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.toLowerCase().endsWith(".mp3");
+			}
+		});	
+		
+		ArrayList<Mp3Info> mp3Info = new ArrayList<Mp3Info>();
+		
+		try { 
+			for (int i  = 0; i < mp3Files.length; i++) {
+				String filePath = mp3Files[i].getAbsolutePath();
 				Mp3File mp3file = new Mp3File(filePath);
 				ID3v1 tag = null;
 				if (mp3file.hasId3v1Tag()) {
@@ -141,18 +152,17 @@ public class Mp3editor {
 				} else {
 					tag = new ID3v1Tag();
 				}
-				tags.add(tag);
-				mp3Paths.add(filePath);
+				mp3Info.add(new Mp3Info(tag, filePath));
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Invalid MP3 File");
 		}
 		
-		//calls the writeCsv method
-		CsvMp3 csv = new CsvMp3(tags, csvOutputPath, mp3Paths);
-		csv.writeCsv();
-		System.out.println("Csv file complete.");
+		return mp3Info;
 	}
 	
-	public static void editMp3s(String mp3OutputPath, String csvInputPath) {
+	public void editMp3s(String mp3OutputPath, String csvInputPath) {
 		//validates paths
 		File csvInputFile = new File(csvInputPath);
 		File mp3OutputFolder = new File(mp3OutputPath);

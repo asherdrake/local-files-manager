@@ -4,16 +4,16 @@ import java.util.ArrayList;
 import com.mpatric.mp3agic.*;
 
 public class CsvMp3 {
-	private ArrayList<ID3v1> tags;
+	private ArrayList<Mp3Info> mp3Info;
 	private String csvOutPath;
-	private ArrayList<String> mp3Paths;
 	private String csvInPath;
 	private String mp3OutPath;
+	private Writer writer;
 	
-	public CsvMp3(ArrayList<ID3v1> tags, String outputPath, ArrayList<String> paths) {
-		this.tags = tags;
+	public CsvMp3(ArrayList<Mp3Info> mp3Info, String outputPath, Writer writer) {
+		this.mp3Info = mp3Info;
 		csvOutPath = outputPath;
-		mp3Paths = paths;
+		this.writer = writer;
 	}
 	
 	public CsvMp3(String csvInPath, String mp3OutPath) {
@@ -22,29 +22,25 @@ public class CsvMp3 {
 	}
 	
 	public void writeCsv() {
-		FileWriter fileWriter = null;
 		try {
-			File csvFile = new File(csvOutPath);
-			fileWriter = new FileWriter(csvFile);
+			writer.append("Track, Album, Artist, File Name, File Path\n");
 			
-			fileWriter.append("Track, Album, Artist, File Name, File Path\n");
-			
-			for (int i = 0; i < tags.size(); i++) {
-				ID3v1 tag = tags.get(i);
+			for (int i = 0; i < mp3Info.size(); i++) {
+				ID3v1 tag = mp3Info.get(i).getTag();
 				
-				fileWriter.append(tag.getTrack() + "," + 
+				writer.append(tag.getTrack() + "," + 
 								  tag.getAlbum() + "," + 
 								  tag.getArtist() + "," + 
 								  tag.getTitle() + "," + 
 								  tag.getTitle() + "," + 
-								  mp3Paths.get(i) + "\n");
+								  mp3Info.get(i).getPath() + "\n");
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
 			try {
-				fileWriter.flush();
-				fileWriter.close();
+				writer.flush();
+				writer.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

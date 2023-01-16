@@ -10,5 +10,40 @@
   		<artifactId>mp3agic</artifactId>
   		<version>0.9.1</version>
 	</dependency>
+	
+	<!-- https://mvnrepository.com/artifact/org.mockito/mockito-core -->
+	<dependency>
+	    <groupId>org.mockito</groupId>
+	    <artifactId>mockito-core</artifactId>
+	    <version>4.11.0</version>
+	    <scope>compile</scope>
+	</dependency>
+	<dependency>
+	    <groupId>org.mockito</groupId>
+	    <artifactId>mockito-inline</artifactId>
+	    <version>4.11.0</version>
+	    <scope>compile</scope>
+	</dependency>
+	
+	<!-- https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter -->
+	<dependency>
+	    <groupId>org.mockito</groupId>
+	    <artifactId>mockito-junit-jupiter</artifactId>
+	    <version>4.11.0</version>
+	</dependency>
+	
+	<!-- https://mvnrepository.com/artifact/org.powermock/powermock-module-junit5 -->
+	<!--<dependency>
+	    <groupId>org.powermock</groupId>
+	    <artifactId>powermock-module-junit5</artifactId>
+	    <version>unknown</version>
+	</dependency>-->
+
+
   </dependencies>
+  
+   <properties>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
 </project>
